@@ -1,0 +1,10 @@
+# do not delete
+
+
+
+/bin/
+/include/
+/lib/
+/pip-selfcheck.json
+/.Python
+/.idea/
