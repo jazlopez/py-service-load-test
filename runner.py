@@ -35,7 +35,7 @@ request = {}
 
 def submit_deep_laser(parameters):
 
-    thread.ThreadRequest(params=parameters, headers=headers, config=CONFIG).start()
+    thread.ThreadRequest(params=parameters, headers=headers, config=CONFIG).start().join()
 
 def throttle(string):
 
