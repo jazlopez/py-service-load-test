@@ -32,6 +32,20 @@ class ThreadRequest(Thread):
 
         activity_template_request = {
 
+            "id": "30000",
+
+            "request": "senddata",
+
+            "datatype": "event",
+
+            "eventKey": "DATA_LOG_SPLUNK",
+
+            "eventParameters": event_parameters
+
+        }
+
+        ws_activity_template_request = {
+
             "Type": "Notification",
 
             "MessageId": self.headers["x-amz-sns-message-id"],
@@ -70,5 +84,7 @@ class ThreadRequest(Thread):
         print("[INFO]\tREQUEST SERVER TOOK {} seconds".format(str(request_time)))
 
         if not self.response.status_code == 200:
+            print("[ERROR]\tUNEXPECTED ERROR: {}".format(self.response.text))
+            print(self.response)
             print(data)
-            print("[ERROR]\tUNEXPECTED ERROR: {}".format(self.response.headers))
+            print("\n\n")

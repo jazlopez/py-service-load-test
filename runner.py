@@ -1,19 +1,17 @@
-import argparse
 import datetime
 import math
 import random
-import time
 import uuid
 
 from revos import catalog, thread
 
 CONFIG = {
 
-    "host": "https://test.apps.thermofisher.com",
+    "host": "http://localhost:9000",
 
-    "uri": "/api/revos/public/v1/log/message",
+    "uri": "/v1/iotrequest",
 
-    "max_queue_size": 40,
+    "max_queue_size": 60,
 
     "sleep": 3
 
@@ -33,10 +31,11 @@ headers = {
     "Content-Type": "application/json"
 }
 
-parameters = {}
-
 request = {}
 
+def submit_deep_laser(parameters):
+
+    thread.ThreadRequest(params=parameters, headers=headers, config=CONFIG).start()
 
 def throttle(string):
 
@@ -48,11 +47,7 @@ def throttle(string):
     """
     value = int(string)
 
-    total = 0
-
-    segment_block = 0
-
-    registered_threads = {}
+    handler = open("payload.log", "w")
 
     total_char_count = len(catalog.chars) - 1
 
@@ -60,52 +55,51 @@ def throttle(string):
 
     total_activity_count = len(catalog.activity) - 1
 
-    for i in range(0, iterations):
+    entries = []
 
-        throttle_params = {}
+    entry = 0
 
-        if segment_block > 0 and segment_block == CONFIG["max_queue_size"]:
+    i = 0
 
-            print("[DEBUG] Take a sip of coffee and relax...pausing %d seconds due to max block of threads..." %
+    parameters = {}
 
-                  CONFIG["sleep"])
+    while i < value:
 
-            time.sleep(CONFIG["sleep"])
+        now = datetime.datetime.now()
 
-            segment_block = 0
+        telemetry_key_index = "TelemetryDataLog_" + str(entry + 1)
 
-        for entry in range(0, 4):
+        log = "\t".join([
 
-            if total >= value:
+            str(i + 1),
 
-                continue
+            catalog.chars[random.randint(0, total_char_count)],
 
-            telemetry_key_index = "TelemetryDataLog_" + str(entry + 1)
+            now.strftime("%d/%m/%Y %H:%M:%S.%f")[:-3],
 
-            now = datetime.datetime.now()
+            catalog.activity[random.randint(0, total_activity_count)]])
 
-            throttle_params[telemetry_key_index] = "\t".join(
-                [
-                    str(total + 1),
+        parameters[telemetry_key_index] = log
 
-                    catalog.chars[random.randint(0, total_char_count)],
+        entries.append(log)
 
-                    now.strftime("%d/%m/%Y %H:%M:%S.%f")[:-3],
+        entry += 1
 
-                    catalog.activity[random.randint(0, total_activity_count)]
-                ]
-            )
+        if entry == 4:
 
-            registered_threads[total] = thread.ThreadRequest(params=throttle_params, headers=headers, config=CONFIG)
-            registered_threads[total].start()
+            submit_deep_laser(parameters)
 
-            total += 1
-            segment_block += 1
+            entry = 0
 
-parser = argparse.ArgumentParser(description="Load test runner for service log micro service.")
-parser.add_argument("--entries",  help="Total activity requests",
-                    required=True, type=throttle)
-args = parser.parse_args()
+        i += 1
 
+    if len(parameters):
+
+        submit_deep_laser(parameters)
+
+    handler.write("\n".join(entries))
+
+
+throttle("150")
 exit()
 
