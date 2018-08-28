@@ -1,5 +1,6 @@
-import datetime
 from threading import Thread
+
+from ..util.logging import Logging
 
 
 class Cluster(Thread):
@@ -41,9 +42,4 @@ class Cluster(Thread):
 
         for _ in self.cmd:
 
-            print("[DEBUG] {now} - {debug}".format(
-
-                " ".join([self.docker_bin, _])
-
-                , datetime.datetime.now()))
-
+            Logging.log("Running command... need calc %s" % _)
